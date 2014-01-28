@@ -1,8 +1,8 @@
 /***************************************************************************************************
 Filename:       protocol_header.h
-Funktion:       Deklarationen für die Benutzung von protocol_function.c, zum kommunizieren
+Funktion:       Deklarationen fï¿½r die Benutzung von protocol_function.c, zum kommunizieren
                 von Mikrocontrollern
-Ersteller:      Viktor Puselja ¦ Marius Preuss
+Ersteller:      Viktor Puselja ï¿½ Marius Preuss
 Datum:          21.01.2014
 ***************************************************************************************************/
 
@@ -152,4 +152,4 @@ byte setLastError(byte errorcode);
 // function: getLastError()
 byte getLastError();
 
-#endif
+#endif /* PROTOCOL_HEADER_H */
