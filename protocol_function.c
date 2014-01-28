@@ -1,9 +1,11 @@
 /***************************************************************************************************
 Filename:       protocol_function.c
 Funktion:       Routinen zum kommunizieren von Mikrocontrollern
-Ersteller:      Viktor Puselja ¦ Marius Preuss
+Ersteller:      Viktor Puselja ï¿½ Marius Preuss
 Datum:          21.01.2014
 ***************************************************************************************************/
+
+#include "protocol_header.h"
 
 // function: connect()
 byte connect(){
