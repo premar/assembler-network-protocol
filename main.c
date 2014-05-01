@@ -1,13 +1,13 @@
 /******************************************************************************
- * File:        network.c
- *
- * Description: Code file of the network api for communication between
- *              multiple microcontrollers.
- *
- * Author:      Marius Preuss, Viktor Puselja
- *
- * Date:        2014-01-21
- *
+* File: network.c
+*
+* Description: Code file of the network api for communication between
+* multiple microcontrollers.
+*
+* Author: Marius Preuss, Viktor Puselja
+*
+* Date: 2014-01-21
+*
 ******************************************************************************/
 
 // TODO / Improvements :
@@ -20,7 +20,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <avr/io.h>
 #include <stdint.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
@@ -30,8 +29,8 @@ volatile uint8_t sendMode = false;
 volatile uint8_t readMode = false;
 
 // Network Attempts
-#define NETWORK_WRITE_PACKET_ATTEMPTS   5
-#define NETWORK_SEND_ATTEMPTS           3
+#define NETWORK_WRITE_PACKET_ATTEMPTS 5
+#define NETWORK_SEND_ATTEMPTS 3
 
 // Represent a network connection.
 struct network_connection {
@@ -46,7 +45,7 @@ struct network_connection {
 // The global network connection.
 struct network_connection network_conn;
 
-#define NETWORK_CHECK_IS_INITIALIZED if (!network_conn.is_initialized)  \
+#define NETWORK_CHECK_IS_INITIALIZED if (!network_conn.is_initialized) \
 { return NETWORK_NOT_INITIALIZED; }
 
 int main(void)
@@ -313,7 +312,6 @@ uint8_t network_write_packet(struct network_packet_header *packet_header,
   const uint8_t *packet_data)
 {
   uint8_t error = NETWORK_NO_ERROR;
-  uint8_t *data;
   uint8_t attempts = 0;
 
   packet_header->checksum = network_calculate_checksum(packet_header);
@@ -326,7 +324,7 @@ uint8_t network_write_packet(struct network_packet_header *packet_header,
       error = network_write_bytes(packet_data, packet_header->length);
 
     if (error == NETWORK_COLLISION_DETECTED)
-      network_wait_after_collision();
+      //network_wait_after_collision();
       
     attempts++;
   } while (error == NETWORK_COLLISION_DETECTED
@@ -356,9 +354,9 @@ uint8_t network_process_byte(uint8_t error, uint8_t data)
 
         // - implement max packet_size option (security)
         //else if (packet_header.length > NETWORK_MAX_DATA_SIZE) {
-        //  network_send(packet_header.source, NETWORK_STATUS_DATA_TO_BIG,
-        //    NETWORK_COMMAND_NONE, NULL, 0);
-        //  error = NETWORK_INVALID_PACKET;
+        // network_send(packet_header.source, NETWORK_STATUS_DATA_TO_BIG,
+        // NETWORK_COMMAND_NONE, NULL, 0);
+        // error = NETWORK_INVALID_PACKET;
         //}
       }
       else if (packet_index == sizeof(struct network_packet_header)) {
@@ -380,7 +378,7 @@ uint8_t network_process_byte(uint8_t error, uint8_t data)
 
   if (error == NETWORK_NO_ERROR) {
     if (packet_index == sizeof(struct network_packet_header)
-      +  packet_header.length) { // packet read
+      + packet_header.length) { // packet read
       if (packet_header.status == NETWORK_STATUS_CHECK) {
         // respond to check
         network_send(packet_header.source, NETWORK_STATUS_ACKNOWLEDGE,
@@ -431,13 +429,13 @@ void network_free_data(uint8_t *data)
 
 void network_pull_up()
 {
-    SEND_DDR &= ~(1 << SEND_DB);
-    SEND_PORT |= (1 << SEND_DB);
+    NETWORK_SEND_DDR &= ~(1 << NETWORK_SEND_DB);
+    NETWORK_SEND_PORT |= (1 << NETWORK_SEND_DB);
 }
 
 void network_pull_down()
 {
-    SEND_PORT &= ~(1 << SEND_DB);
+    NETWORK_SEND_PORT &= ~(1 << NETWORK_SEND_DB);
 }
 
 uint8_t network_write_bytes(const uint8_t *data, uint8_t length)
@@ -460,7 +458,7 @@ uint8_t network_write_byte(uint8_t byte)
     uint8_t i;
     uint8_t error = NETWORK_NO_ERROR;
 
-    network_send_zero();                         // Impuls das Daten gesendet werden
+    network_send_zero(); // Impuls das Daten gesendet werden
 
     do
     {
@@ -511,7 +509,7 @@ ISR(INT0_vect)
 {
     if(readMode == false) {
         // Trigger für Interrupt
-        //TCCR2  = (1<<CS22) | (1<<CS21);
+        //TCCR2 = (1<<CS22) | (1<<CS21);
         //TIMSK |= (1<<TOIE2);
     }
 }
@@ -519,8 +517,6 @@ ISR(INT0_vect)
 ISR(TIMER1_COMPA_vect) {
     static uint8_t byte = 0;
     static uint8_t counter = 0;
-
-    byte NETWORK_SEND_DB
 
 
 
