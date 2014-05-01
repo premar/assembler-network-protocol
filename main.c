@@ -12,7 +12,6 @@
 
 // TODO / Improvements :
 // - implement wait_after_collision
-// - write_bytes with two source buffer (malloc)
 // - implement max packet_size option (security)
 // - optimize if statements
 // - check malloc return value
@@ -318,54 +317,23 @@ uint8_t network_write_packet(struct network_packet_header *packet_header,
   uint8_t attempts = 0;
 
   packet_header->checksum = network_calculate_checksum(packet_header);
-  // copy header and data into buffer
-  data = (uint8_t*)malloc(sizeof(struct network_packet_header)
-    + packet_header->length);
-  memcpy(data, packet_header, sizeof(struct network_packet_header));
-  if (packet_header->length > 0)
-    memcpy(data + sizeof(struct network_packet_header), packet_data,
-      packet_header->length);
 
   // write buffer to the network
   do {
-    error = network_write_bytes(data, sizeof(struct network_packet_header)
-      + packet_header->length);
-    if (error == NETWORK_COLLISION_DETECTED) {
-      //network_wait_after_collision();
-    }
+    error = network_write_bytes((const uint8_t*)packet_header,
+      sizeof(struct network_packet_header));
+    if (error == NETWORK_NO_ERROR)
+      error = network_write_bytes(packet_data, packet_header->length);
+
+    if (error == NETWORK_COLLISION_DETECTED)
+      network_wait_after_collision();
+      
     attempts++;
   } while (error == NETWORK_COLLISION_DETECTED
     && attempts < NETWORK_WRITE_PACKET_ATTEMPTS);
 
-  free(data);
-
   return error;
 }
-
-// - write_bytes with two source buffer (malloc)
-//uint8_t network_write_packet(struct network_packet_header *packet_header,
-//  const uint8_t *packet_data)
-//{
-//  uint8_t error = NETWORK_NO_ERROR;
-//  uint8_t *data;
-//  uint8_t attempts = 0;
-//
-//  packet_header->checksum = network_calculate_checksum(packet_header);
-//
-//  // write buffer to the network
-//  do {
-//    error = network_write_bytes((const uint8_t*)packet_header,
-//      sizeof(struct network_packet_header), data, packet_header->length);
-//    if (error == NETWORK_COLLISION_DETECTED) {
-//      network_signal_collision();
-//      network_wait_after_collision();
-//    }
-//    attempts++;
-//  } while (error == NETWORK_COLLISION_DETECTED
-//    && attempts < NETWORK_WRITE_PACKET_ATTEMPTS);
-//
-//  return error;
-//}
 
 uint8_t network_process_byte(uint8_t error, uint8_t data)
 {
