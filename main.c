@@ -15,8 +15,6 @@
 // - write_bytes with two source buffer (malloc)
 // - implement max packet_size option (security)
 // - optimize if statements
-// - single broadcast check (network traffic)
-// - remove hello if no other use found
 // - check malloc return value
 
 #include "protocol.h"
