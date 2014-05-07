@@ -237,12 +237,4 @@ uint8_t network_send_zero();
  */
 uint8_t network_send_one();
 
-/*
- * Function: network_write_bytes()
- * Description: Writes bytes to the network.
- */
-// - write_bytes with two source buffer (malloc)
-//extern uint8_t network_write_bytes(const uint8_t *header,
-//  uint8_t header_length,  const uint8_t *data, uint8_t data_length);
-
 #endif /* _NETWORK_H_ */
