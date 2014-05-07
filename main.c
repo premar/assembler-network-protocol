@@ -1,12 +1,12 @@
 /******************************************************************************
-* File: network.c
+* File:         network.c
 *
-* Description: Code file of the network api for communication between
-* multiple microcontrollers.
+* Description:  Code file of the network api for communication between
+*               multiple microcontrollers.
 *
-* Author: Marius Preuss, Viktor Puselja
+* Author:       Marius Preuss, Viktor Puselja
 *
-* Date: 2014-01-21
+* Date:         2014-01-21
 *
 ******************************************************************************/
 
@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <avr/io.h>
 #include <stdint.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
