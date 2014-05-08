@@ -82,7 +82,6 @@ uint8_t network_initialize(void)
 
     if (!is_address_used) {
       network_conn.address = address;
-      //network_hello();
     } else {
       network_conn.is_initialized = false;
       error = NETWORK_NONE_ADDRESS_AVAILABLE;
