@@ -215,25 +215,25 @@ uint8_t network_write_byte(uint8_t byte);
 
 /*
  * Function: network_pull_up()
- * Description:
+ * Description: Toogle pull up impulse
  */
 void network_pull_up();
 
 /*
  * Function: network_pull_down()
- * Description: Write single byte.
+ * Description: Toogle pull down impulse
  */
 void network_pull_down();
 
 /*
  * Function: network_send_zero()
- * Description: Write single byte.
+ * Description: Sends on Bit (0) on Bus
  */
 uint8_t network_send_zero();
 
 /*
  * Function: network_send_one()
- * Description: Write single byte.
+ * Description: Sends on Bit (1) on Bus
  */
 uint8_t network_send_one();
 
