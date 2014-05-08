@@ -212,15 +212,16 @@ uint8_t network_wait_for_acknowledge(
 
   // check and acknowledge packets must not be awaited for acknowledge
   if (packet->status != NETWORK_STATUS_CHECK && packet->status
-    != NETWORK_STATUS_ACKNOWLEDGE)
+    != NETWORK_STATUS_ACKNOWLEDGE && packet->Status
+    != NETWORK_STATUS_DATA_TO_BIG) {
     error = network_wait_for_packet(packet->destination,
-      NETWORK_STATUS_ACKNOWLEDGE, packet->command, packet->id,
+      NETWORK_STATUS_ACK_OR_DTB, packet->command, packet->id,
       &acknowledge_packet, NULL, NETWORK_TIMEOUT_ACKNOWLEDGE);
-
-  // - implement max packet_size option (security)
-  // add NETWORK_STATUS_DATA_TO_BIG to check
-  // change network_wait_for_packet to wait for DATA_TO_BIG too
-  // return error if DATA_TO_BIG is returned
+    //if (error == NETWORK_NO_ERROR) {
+    //  if (acknowledge_packet.Status == NETWORK_STATUS_DATA_TO_BIG)
+    //    error = NETWORK_DATA_TO_BIG;
+    //}
+  }
 
   return error;
 }
@@ -239,7 +240,10 @@ uint8_t network_wait_for_packet(uint8_t source, uint8_t status,
       // check if it is the desired packet
       if (packet_header != NULL &&
         ((source != NETWORK_ADDRESS_NONE && source != packet_header->source)
-        || (status != NETWORK_STATUS_ANY && status != packet_header->status)
+        || (status != NETWORK_STATUS_ANY && status != packet_header->status
+        /*&& (status == NETWORK_STATUS_ACK_OR_DTB && packet_header->status
+        != NETWORK_STATUS_ACKNOWLEDGE && packet_header->status
+        != NETWORK_STATUS_DATA_TO_BIG)*/)
         || (command != NETWORK_COMMAND_NONE
         && command != packet_header->command)
         || (id != NETWORK_ID_ANY && id != packet_header->id)))
@@ -350,15 +354,16 @@ uint8_t network_process_byte(uint8_t error, uint8_t data)
       if (packet_index == 2) {
         // when destination and length read check destination address
         if (packet_header.destination != network_conn.address
-          && packet_header.destination != NETWORK_ADDRESS_BROADCAST)
+          && packet_header.destination != NETWORK_ADDRESS_BROADCAST) {
           error = NETWORK_INVALID_PACKET;
-
-        // - implement max packet_size option (security)
+        }
+        //#ifdef NETWORK_MAX_DATA_SIZE
         //else if (packet_header.length > NETWORK_MAX_DATA_SIZE) {
-        // network_send(packet_header.source, NETWORK_STATUS_DATA_TO_BIG,
-        // NETWORK_COMMAND_NONE, NULL, 0);
-        // error = NETWORK_INVALID_PACKET;
+        //  network_send(packet_header.source, NETWORK_STATUS_DATA_TO_BIG,
+        //  NETWORK_COMMAND_NONE, NULL, 0);
+        //  error = NETWORK_INVALID_PACKET;
         //}
+        //#endif
       }
       else if (packet_index == sizeof(struct network_packet_header)) {
         // when header read check checksum
