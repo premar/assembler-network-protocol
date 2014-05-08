@@ -452,13 +452,14 @@ uint8_t network_write_bytes(const uint8_t *data, uint8_t length)
 
 uint8_t network_write_byte(uint8_t byte)
 {
-    cli();
-
-    sendMode = true;
-
+    uint8_t sreg;
     uint8_t i;
     uint8_t error = NETWORK_NO_ERROR;
-
+    
+    sendMode = true;
+    tmp_sreg = SREG;
+    
+    cli();
     network_send_zero(); // Impuls das Daten gesendet werden
 
     do
@@ -474,9 +475,7 @@ uint8_t network_write_byte(uint8_t byte)
         i++;
     } while ((i < 7) && (error == 0));
 
-
-    // TODO Schlecht impelemtiert -> Bessere Lösung SREG-Sicherung zurückholen
-    sei();
+    SREG = tmp_sreg;
 
     return error;
 }
@@ -508,22 +507,35 @@ uint8_t network_send_one()
 
 ISR(INT0_vect)
 {
-    if(readMode == false) {
+    if(readMode == false) 
+    {
         // Trigger für Interrupt
         //TCCR2 = (1<<CS22) | (1<<CS21);
         //TIMSK |= (1<<TOIE2);
+        readMode = true;
     }
 }
 
-ISR(TIMER1_COMPA_vect) {
+ISR(TIMER1_COMPA_vect) 
+{
     static uint8_t byte = 0;
-    static uint8_t counter = 0;
+    static uint8_t counterByte = 0;
+    uint8_t temp = 0;
+    uint8_t error = NETWORK_NO_ERROR;
 
-
-
-
-
-    // uint8_t network_process_byte(uint8_t error, uint8_t data)
-    // TODO Einlesen des Wert
-    // TODO Schieben
+    if (readMode == true) 
+    {
+        if (counterByte == 7) 
+        {
+            network_process_byte(error, byte);
+            counterByte = 0;
+            byte = 0;
+        } 
+        else 
+        {
+            byte |= NETWORK_SEND_PORT;
+            byte &= (0<<1);
+            counterByte++;
+        }
+    }
 }
