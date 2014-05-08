@@ -507,17 +507,17 @@ uint8_t network_send_one()
 
 ISR(INT0_vect)
 {
-    if(readMode == false) 
-    {
-        // Trigger für Interrupt
-        //TCCR2 = (1<<CS22) | (1<<CS21);
-        //TIMSK |= (1<<TOIE2);
-        readMode = true;
+    // TODO:
+    // TCNT0 = 128;       // TIMER2_OVF_vect auf 128 Impulse
+    // TIMER2_OVF_vect aktivieren
+    // INT0_vect deaktivieren
     }
 }
 
-ISR(TIMER1_COMPA_vect) 
+ISR(TIMER2_OVF_vect)
 {
+    // TCNT0 = 256;       // TIMER2_OVF_vect auf 256 Impulse
+  
     static uint8_t byte = 0;
     static uint8_t counterByte = 0;
     uint8_t temp = 0;
@@ -525,6 +525,7 @@ ISR(TIMER1_COMPA_vect)
 
     if (readMode == true) 
     {
+        // TCNT0 = 256;       // TIMER2_OVF_vect auf 256 Impulse
         if (counterByte == 7) 
         {
             network_process_byte(error, byte);
@@ -538,4 +539,7 @@ ISR(TIMER1_COMPA_vect)
             counterByte++;
         }
     }
+    
+    // Nach erfolgreichen lesen/schreiben TIMER2_OVF_vect deaktivieren
+    // INT0_vect aktivieren
 }
