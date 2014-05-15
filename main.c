@@ -464,6 +464,7 @@ void network_write_byte(uint8_t byte)
 {
     writeModeByte = byte;
     writeMode = true;
+    // INT0_vect deaktivieren
     // TIMER2_OVF_vect triggern
 }
 
@@ -522,7 +523,7 @@ ISR(TIMER2_OVF_vect)
         static uint8_t writeModeError = NETWORK_NO_ERROR;
         if ((writeModeCounter < 7) && (writeModeError == 0)) 
         {
-            if (byte & (1 << writeModeCounter))
+            if (writeModeByte & (1 << writeModeCounter))
             {
                 writeModeError = network_send_one();
             }
