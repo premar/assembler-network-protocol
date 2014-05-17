@@ -24,11 +24,6 @@
 #define NETWORK_VALIDATE_DDR    DDRA
 #define NETWORK_VALIDATE_DB     PD1*/
 
-// - implement max packet_size option (security)
-// uncomment to specify max packet data size, packtes with more data
-// are discarded.
-//#define NETWORK_MAX_DATA_SIZE     64
-
 // Network Address
 #define NETWORK_ADDRESS_NONE        0x00
 #define NETWORK_ADDRESS_MIN         0x01
@@ -40,8 +35,6 @@
 #define NETWORK_STATUS_REQUEST      0x01
 #define NETWORK_STATUS_RESPONSE     0x02
 #define NETWORK_STATUS_ACKNOWLEDGE  0x03
-// - implement max packet_size option (security)
-//#define NETWORK_STATUS_DATA_TO_BIG  0x04
 #define NETWORK_STATUS_ANY          0xFF
 
 // Network Commands
@@ -61,8 +54,6 @@
 #define NETWORK_NO_DATA                 0x20
 #define NETWORK_TIMEOUT_EXCEEDED        0x21
 #define NETWORK_INVALID_PACKET          0x22
-// - implement max packet_size option (security)
-//#define NETWORK_DATA_TO_BIG             0x23
 
 // Network Timeouts
 #define NETWORK_TIMEOUT_INFINITE    ((int16_t)UINT16_MAX)

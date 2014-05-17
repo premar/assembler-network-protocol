@@ -10,12 +10,6 @@
 *
 ******************************************************************************/
 
-// TODO / Improvements :
-// - implement wait_after_collision
-// - implement max packet_size option (security)
-// - optimize if statements
-// - check malloc return value
-
 #include "network.h"
 
 #include <stdlib.h>
@@ -197,20 +191,10 @@ uint8_t network_wait_for_acknowledge(
 
     // check and acknowledge packets must not be awaited for acknowledge
     if (packet->status != NETWORK_STATUS_CHECK
-        && packet->status != NETWORK_STATUS_ACKNOWLEDGE
-        /*&& packet->status != NETWORK_STATUS_DATA_TO_BIG*/) {
+        && packet->status != NETWORK_STATUS_ACKNOWLEDGE) {
         error = network_wait_for_packet(packet->destination,
             NETWORK_STATUS_ACKNOWLEDGE, packet->command, packet->id,
             &acknowledge_packet, NULL, NETWORK_TIMEOUT_ACKNOWLEDGE);
-    /*
-    if (error == NETWORK_NO_ERROR)
-    {
-        if (acknowledge_packet.Status == NETWORK_STATUS_DATA_TO_BIG)
-        {
-            error = NETWORK_DATA_TO_BIG;
-        }
-    }
-    */
   }
   return error;
 }
@@ -233,10 +217,7 @@ uint8_t network_wait_for_packet(uint8_t source, uint8_t status,
                 && ((source != NETWORK_ADDRESS_NONE
                 && source != packet_header->source)
                 || (status != NETWORK_STATUS_ANY
-                && status != packet_header->status
-                /*&& (status == NETWORK_STATUS_ACK_OR_DTB
-                && packet_header->status != NETWORK_STATUS_ACKNOWLEDGE
-                && packet_header->status != NETWORK_STATUS_DATA_TO_BIG)*/)
+                && status != packet_header->status)
                 || (command != NETWORK_COMMAND_NONE
                 && command != packet_header->command)
                 || (id != NETWORK_ID_ANY && id != packet_header->id)))
@@ -372,17 +353,6 @@ uint8_t network_process_byte(uint8_t error, uint8_t data)
                 {
                     error = NETWORK_INVALID_PACKET;
                 }
-                /*
-                #ifdef NETWORK_MAX_DATA_SIZE
-                else if (packet_header.length > NETWORK_MAX_DATA_SIZE) 
-                {
-                    network_send(packet_header.source,
-                        NETWORK_STATUS_DATA_TO_BIG,
-                        NETWORK_COMMAND_NONE, NULL, 0);
-                    error = NETWORK_INVALID_PACKET;
-                }
-                #endif
-                */
             }
             else if (packet_index == sizeof(struct network_packet_header))
             {
