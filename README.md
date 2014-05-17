@@ -1,4 +1,4 @@
 Network_Protocol
 ================
 
-Communication between multiple microcontrollers
+A network protocol for communication between multiple microcontrollers.

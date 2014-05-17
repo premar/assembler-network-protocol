@@ -16,13 +16,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define     NETWORK_SEND_PORT       PORTA
-#define     NETWORK_SEND_DDR        DDRA
-#define     NETWORK_SEND_DB         PD0
+#define NETWORK_SEND_PORT       PORTA
+#define NETWORK_SEND_DDR        DDRA
+#define NETWORK_SEND_DB         PD0
 
-#define     NETWORK_VALIDATE_PORT   PORTA
-#define     NETWORK_VALIDATE_DDR    DDRA
-#define     NETWORK_VALIDATE_DB     PD1
+/*#define NETWORK_VALIDATE_PORT   PORTA
+#define NETWORK_VALIDATE_DDR    DDRA
+#define NETWORK_VALIDATE_DB     PD1*/
 
 // - implement max packet_size option (security)
 // uncomment to specify max packet data size, packtes with more data
@@ -56,19 +56,29 @@
 #define NETWORK_NOT_INITIALIZED         0x01
 #define NETWORK_NONE_ADDRESS_AVAILABLE  0x02
 #define NETWORK_ADDRESS_IN_USE          0x03
-#define NETWORK_COLLISION_DETECTED      0x20
-#define NETWORK_NO_DATA                 0x21
-#define NETWORK_TIMEOUT_EXCEEDED        0x22
-#define NETWORK_INVALID_PACKET          0x23
+#define NETWORK_WRITE_ERROR				0x10
+#define NETWORK_COLLISION_DETECTED      0x11
+#define NETWORK_NO_DATA                 0x20
+#define NETWORK_TIMEOUT_EXCEEDED        0x21
+#define NETWORK_INVALID_PACKET          0x22
 // - implement max packet_size option (security)
-//#define NETWORK_DATA_TO_BIG             0x30
+//#define NETWORK_DATA_TO_BIG             0x23
 
 // Network Timeouts
 #define NETWORK_TIMEOUT_INFINITE    ((int16_t)UINT16_MAX)
 #define NETWORK_TIMEOUT_CHECK       200
 #define NETWORK_TIMEOUT_ACKNOWLEDGE 100
 
-#define     NETWORK_SEND_DELAY      300
+//#define NETWORK_SEND_DELAY      300
+
+// Network Attempts
+#define NETWORK_WRITE_PACKET_ATTEMPTS   5
+#define NETWORK_SEND_ATTEMPTS           3
+
+// Network Timer Interrupt Modes
+#define NETWORK_TIMER_INTERRUPT_MODE_NONE   0
+#define NETWORK_TIMER_INTERRUPT_MODE_READ   1
+#define NETWORK_TIMER_INTERRUPT_MODE_WRITE  2
 
 // Represents the data of a request.
 struct network_request_data {
@@ -89,6 +99,26 @@ struct network_packet_header {
   uint8_t checksum;
   uint8_t command;
 };
+
+// Represents a network connection.
+struct network_connection 
+{
+    uint8_t address;
+    uint8_t last_id;
+    bool is_packet_avaiable;
+    struct network_packet_header last_packet_header;
+    uint8_t *last_packet_data;
+    bool is_initialized;
+};
+
+// The global network connection.
+extern struct network_connection network_conn;
+
+// Network timer interrupt mode
+extern volatile uint8_t network_timer_int_mode;
+
+// Network timer interrupt byte buffer
+extern volatile uint8_t network_timer_int_byte;
 
 /*
  * Function: network_initialize()

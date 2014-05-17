@@ -16,3 +16,9 @@
 *.exe
 *.out
 *.app
+
+# AVR temp files
+*.aws
+
+#AVR temp directories
+default/
