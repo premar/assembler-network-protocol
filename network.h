@@ -16,14 +16,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define NETWORK_SEND_PORT       PORTA
-#define NETWORK_SEND_DDR        DDRA
-#define NETWORK_SEND_DB         PD0
-
-/*#define NETWORK_VALIDATE_PORT   PORTA
-#define NETWORK_VALIDATE_DDR    DDRA
-#define NETWORK_VALIDATE_DB     PD1*/
-
 // Network Address
 #define NETWORK_ADDRESS_NONE        0x00
 #define NETWORK_ADDRESS_MIN         0x01
@@ -60,8 +52,6 @@
 #define NETWORK_TIMEOUT_CHECK       200
 #define NETWORK_TIMEOUT_ACKNOWLEDGE 100
 
-//#define NETWORK_SEND_DELAY      300
-
 // Network Attempts
 #define NETWORK_WRITE_PACKET_ATTEMPTS   5
 #define NETWORK_SEND_ATTEMPTS           3
@@ -70,6 +60,35 @@
 #define NETWORK_TIMER_INTERRUPT_MODE_NONE   0
 #define NETWORK_TIMER_INTERRUPT_MODE_READ   1
 #define NETWORK_TIMER_INTERRUPT_MODE_WRITE  2
+
+// network external interrupt constants
+#define NETWORK_INT_VECT        INT0_vect
+#define NETWORK_INT             INT0
+#define NETWORK_INTF            INTF0
+#define NETWORK_ISC1            ISC01
+#define NETWORK_ISC0            ISC00
+
+// network timer interrupt constants
+#define NETWORK_TIMER_OVF_VECT  TIMER0_OVF_vect
+#define NETWORK_TIMER_COMP_VECT TIMER0_COMP_vect
+#define NETWORK_TOIE            TOIE0
+#define NETWORK_OCIE            OCIE0
+#define NETWORK_TOV             TOV0
+#define NETWORK_OCF             OCF0
+#define NETWORK_TCCR            TCCR0
+#define NETWORK_CS0             CS00
+#define NETWORK_CS2             CS02
+#define NETWORK_TCNT            TCNT0
+#define NETWORK_OCR             OCR0
+
+#define NETWORK_PORT            PORTD
+#define NETWORK_DDR             DDRD
+#define NETWORK_PIN             PIND
+#define NETWORK_PORT_PIN        PD2
+
+/*#define NETWORK_VALIDATE_PORT   PORTA
+#define NETWORK_VALIDATE_DDR    DDRA
+#define NETWORK_VALIDATE_DB     PD1*/
 
 // Represents the data of a request.
 struct network_request_data {
@@ -199,6 +218,12 @@ uint8_t network_write_packet(struct network_packet_header *packet_header,
   const uint8_t *packet_data);
 
 /*
+ * Function: network_write_bytes()
+ * Description: Writes bytes to the network.
+ */
+uint8_t network_write_bytes(const uint8_t *data, uint8_t length);
+
+/*
  * Function: network_wait_after_collision()
  * Description: Waits a pseudo random time. To use after a collision.
  */
@@ -222,11 +247,14 @@ uint8_t network_calculate_checksum(struct network_packet_header *packet);
  */
 void network_free_data(uint8_t *data);
 
-/*
- * Function: network_write_bytes()
- * Description: Writes bytes to the network.
- */
-uint8_t network_write_bytes(const uint8_t *data, uint8_t length);
+void network_initialize_external_int(void);
+void network_disable_external_int(void);
+void network_enable_external_int(void);
+void network_initialize_timer_int(void);
+void network_disable_timer_ovf_int(void);
+void network_disable_timer_cpm_int(void);
+void network_enable_timer_ovf_int(void);
+void network_enable_timer_cpm_int(void);
 
 /*
  * Function: network_write_byte()
@@ -234,28 +262,8 @@ uint8_t network_write_bytes(const uint8_t *data, uint8_t length);
  */
 uint8_t network_write_byte(uint8_t byte);
 
-/*
- * Function: network_pull_up()
- * Description: Toogle pull up impulse
- */
-void network_pull_up();
+void network_set_port_mode(bool read);
+uint8_t network_write_bit(uint8_t bit);
 
-/*
- * Function: network_pull_down()
- * Description: Toogle pull down impulse
- */
-void network_pull_down();
-
-/*
- * Function: network_send_zero()
- * Description: Sends on Bit (0) on Bus
- */
-uint8_t network_send_zero();
-
-/*
- * Function: network_send_one()
- * Description: Sends on Bit (1) on Bus
- */
-uint8_t network_send_one();
 
 #endif /* _NETWORK_H_ */

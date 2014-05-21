@@ -5,7 +5,7 @@
 int main(void)
 {
     sei();
-    network_pull_up();
+
     while(1)
     {
     }
