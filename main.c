@@ -6,6 +6,9 @@ int main(void)
 {
     sei();
 
+    network_initialize();
+    network_write_byte(56);
+
     while(1)
     {
     }

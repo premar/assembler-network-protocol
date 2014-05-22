@@ -26,6 +26,7 @@ default/
 #Code:Block temp files
 *.cbp
 *.layout
+*.depend
 
 #Code:Block temp directories
 bin/
