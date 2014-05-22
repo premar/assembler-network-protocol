@@ -22,3 +22,11 @@
 
 #AVR temp directories
 default/
+
+#Code:Block temp files
+.cbp
+.layout
+
+#Code:Block temp directories
+bin/
+obj/
