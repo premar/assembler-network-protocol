@@ -17,17 +17,25 @@
 *.out
 *.app
 
-# AVR temp files
+# Makefile output
+*.elf
+*.hex
+*.eep
+*.lss
+*.sym
+*.map
+*.lst
+.dep/
+
+# AVR files
+*.aps
 *.aws
 
-#AVR temp directories
-default/
-
-#Code:Block temp files
+# Code:Block temp files
 *.cbp
 *.layout
 *.depend
 
-#Code:Block temp directories
+# Code:Block temp directories
 bin/
 obj/
