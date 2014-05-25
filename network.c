@@ -39,23 +39,20 @@ uint8_t network_initialize(void)
         network_initialize_timer_int();
         network_set_port_mode(true);
 
-        // initialize connection
         network_conn.address = NETWORK_ADDRESS_NONE;
         network_conn.last_id = 0;
         network_conn.is_packet_avaiable = false;
         network_conn.is_initialized = true;
 
-        // determine address
-        address = NETWORK_ADDRESS_MIN - 1;
+        address = NETWORK_ADDRESS_MIN;
         do
         {
-            address++;
-            is_address_used = network_check(address);
-        } while (address <= NETWORK_ADDRESS_MAX && is_address_used);
+            is_address_used = network_check(address++);
+        } while (address < NETWORK_ADDRESS_MAX && is_address_used);
 
         if (!is_address_used) 
         {
-            network_conn.address = address;
+            network_conn.address = --address;
         } 
         else 
         {
@@ -71,12 +68,10 @@ bool network_check(uint8_t address)
     uint8_t error = NETWORK_NO_ERROR;
     struct network_packet_header packet_header;
 
-    // send check
     error = network_send(address, NETWORK_STATUS_CHECK, NETWORK_COMMAND_NONE,
         NULL, 0);
     if (error == NETWORK_NO_ERROR) 
     {
-        // wait for check acknowledge
         error = network_wait_for_packet(address, NETWORK_STATUS_ACKNOWLEDGE,
             NETWORK_COMMAND_NONE, NETWORK_ID_ANY, &packet_header, NULL,
             NETWORK_TIMEOUT_CHECK);
@@ -100,12 +95,10 @@ uint8_t network_get_response(uint8_t address, uint8_t command,
 
     NETWORK_CHECK_IS_INITIALIZED
 
-    // send request
     error = network_send(address, NETWORK_STATUS_REQUEST, command,
         request_data, request_length);
     if (error == NETWORK_NO_ERROR && address != NETWORK_ADDRESS_BROADCAST) 
     {
-        // receive response
         error = network_wait_for_packet(address, NETWORK_STATUS_RESPONSE,
             command, NETWORK_ID_ANY, &response_packet, response_data, timeout);
         if (error == NETWORK_NO_ERROR && response_data != NULL)
@@ -317,20 +310,6 @@ uint8_t network_write_packet(struct network_packet_header *packet_header,
     return error;
 }
 
-uint8_t network_write_bytes(const uint8_t *data, uint8_t length)
-{
-    uint8_t error = NETWORK_NO_ERROR;
-    const uint8_t *current;
-
-    for (current = data; error == NETWORK_NO_ERROR && current < data + length;
-        current++)
-    {
-        error = network_write_byte(*current);
-    }
-
-    return error;
-}
-
 void network_wait_after_collision(void)
 {
 	// TODO: implement
@@ -349,12 +328,10 @@ uint8_t network_process_byte(uint8_t error, uint8_t data)
     {
         if (packet_index < sizeof(struct network_packet_header)) 
         {
-            // write byte to header
             ((uint8_t*)&packet_header)[packet_index++] = data;
 
             if (packet_index == 2) 
             {
-                // when destination and length read check destination address
                 if (packet_header.destination != network_conn.address
                     && packet_header.destination != NETWORK_ADDRESS_BROADCAST)
                 {
@@ -363,7 +340,6 @@ uint8_t network_process_byte(uint8_t error, uint8_t data)
             }
             else if (packet_index == sizeof(struct network_packet_header))
             {
-                // when header read check checksum
                 if (network_calculate_checksum(&packet_header)
                     != packet_header.checksum)
                 {
@@ -378,7 +354,6 @@ uint8_t network_process_byte(uint8_t error, uint8_t data)
             {
                 packet_data = (uint8_t*)malloc(packet_header.length);
             }
-            // write byte to data
             packet_data[packet_index++ - sizeof(struct network_packet_header)]
                 = data;
         }
@@ -389,10 +364,8 @@ uint8_t network_process_byte(uint8_t error, uint8_t data)
         if (packet_index == sizeof(struct network_packet_header)
             + packet_header.length) 
         { 
-            // packet read
             if (packet_header.status == NETWORK_STATUS_CHECK) 
             {
-                // respond to check
                 network_send(packet_header.source, NETWORK_STATUS_ACKNOWLEDGE,
                     NETWORK_COMMAND_NONE, NULL, 0);
             } 
@@ -446,24 +419,24 @@ void network_initialize_external_int(void)
 {
     network_disable_external_int();
 
-    // clear interrupt flag (external)
-    GIFR &= ~(1<<NETWORK_INTF);
-
     // set interrupt on fallig edge
-    MCUCR &= ~(1<<NETWORK_ISC0);
-    MCUCR |= (1<<NETWORK_ISC1);
+    MCUCR &= ~(1 << NETWORK_ISC0);
+    MCUCR |= (1 << NETWORK_ISC1);
 }
 
 void network_disable_external_int(void)
 {
     // clear external interrupt flag
-    GICR &= ~(1<<NETWORK_INT);
+    GICR &= ~(1 << NETWORK_INT);
 }
 
 void network_enable_external_int(void)
 {
+    // clear eventual external register flag
+    GIFR = (1 << NETWORK_INTF);
+
     // set external interrupt flag
-    GICR |= (1<<NETWORK_INT);
+    GICR |= (1 << NETWORK_INT);
 }
 
 void network_initialize_timer_int(void)
@@ -471,11 +444,8 @@ void network_initialize_timer_int(void)
     network_disable_timer_ovf_int();
     network_disable_timer_cpm_int();
 
-    // clear interrupt flags (overflow and compare)
-    TIFR &= ~((1<<NETWORK_TOV) | (1<<NETWORK_OCF));
-
     // set normal mode, 1024 prescaler
-    NETWORK_TCCR = (1<<NETWORK_CS2) | (1<<NETWORK_CS0);
+    NETWORK_TCCR = (1 << NETWORK_CS2 | 1 << NETWORK_CS0);
 
     // compare match, used by read
     NETWORK_OCR = 127;
@@ -483,14 +453,14 @@ void network_initialize_timer_int(void)
 
 void network_disable_timer_ovf_int(void)
 {
-    // clear timer overflow interrupt flag
-    TIMSK &= ~(1<<NETWORK_TOIE);
+    // clear timer overflow interrupt enable flag
+    TIMSK &= ~(1 << NETWORK_TOIE);
 }
 
 void network_disable_timer_cpm_int(void)
 {
-    // clear timer compare match interrupt flag
-    TIMSK &= ~(1<<NETWORK_OCIE);
+    // clear timer compare match interrupt enable flag
+    TIMSK &= ~(1 << NETWORK_OCIE);
 }
 
 void network_enable_timer_ovf_int(void)
@@ -498,8 +468,11 @@ void network_enable_timer_ovf_int(void)
     // reset counter
     NETWORK_TCNT = 0;
 
-    // set timer overflow interrupt flag
-    TIMSK |= (1<<NETWORK_TOIE);
+    // clear eventual overflow register flag
+    TIFR = (1 << NETWORK_TOV);
+
+    // set timer overflow interrupt enable flag
+    TIMSK |= (1 << NETWORK_TOIE);
 }
 
 void network_enable_timer_cpm_int(void)
@@ -507,8 +480,25 @@ void network_enable_timer_cpm_int(void)
     // reset counter
     NETWORK_TCNT = 0;
 
-    // set timer compare match interrupt flag
-    TIMSK |= (1<<NETWORK_OCIE);
+    // clear eventual compare register flag
+    TIFR = (1 << NETWORK_OCF);
+
+    // set timer compare match interrupt enable flag
+    TIMSK |= (1 << NETWORK_OCIE);
+}
+
+uint8_t network_write_bytes(const uint8_t *data, uint8_t length)
+{
+    uint8_t error = NETWORK_NO_ERROR;
+    const uint8_t *current;
+
+    for (current = data; error == NETWORK_NO_ERROR && current < data + length;
+        current++)
+    {
+        error = network_write_byte(*current);
+    }
+
+    return error;
 }
 
 uint8_t network_write_byte(uint8_t byte)
@@ -534,7 +524,7 @@ ISR(NETWORK_INT_VECT)
     network_disable_external_int();
 
     // clear eventual second interrupt flag
-    //GIFR &= ~(1<<NETWORK_INTF);
+    //GIFR &= ~(1 << NETWORK_INTF);
 
     // if somehow a second external interrupt occurs while still processing
     // the last, terminate
@@ -553,7 +543,7 @@ ISR(NETWORK_TIMER_COMP_VECT)
     network_disable_timer_cpm_int();
 
     // clear eventual second interrupt flag
-    //GIFR &= ~(1<<NETWORK_OCF);
+    //GIFR &= ~(1 << NETWORK_OCF);
 
     // if invalid call, terminate
     //if (network_timer_int_mode == NETWORK_TIMER_INTERRUPT_MODE_NONE)
@@ -570,13 +560,12 @@ ISR(NETWORK_TIMER_OVF_VECT)
     
     if (network_timer_int_mode == NETWORK_TIMER_INTERRUPT_MODE_READ)
     {
-        // read bit
-        bit = NETWORK_PIN & (1<<NETWORK_PORT_PIN);
+        bit = NETWORK_PIN & (1 << NETWORK_PORT_PIN);
         bit >>= NETWORK_PORT_PIN;
         network_timer_int_byte <<= 1;
         network_timer_int_byte |= bit;
         
-        if (++index < 7) // byte read
+        if (++index == 8)
         {
             network_process_byte(NETWORK_NO_ERROR, network_timer_int_byte);
             reset = true;
@@ -584,12 +573,11 @@ ISR(NETWORK_TIMER_OVF_VECT)
     }
     else if (network_timer_int_mode == NETWORK_TIMER_INTERRUPT_MODE_WRITE)
     {
-        // send bit
         bit = network_timer_int_byte & 0b10000000;
         network_timer_int_byte <<= 1;
         network_write_bit(bit);
         
-        if (++index < 7) // byte written
+        if (++index == 8)
         {
             reset = true;
         }
@@ -605,55 +593,6 @@ ISR(NETWORK_TIMER_OVF_VECT)
         network_set_port_mode(true);
         network_enable_external_int();
     }
-
-    //if (readMode == true) 
-    //{
-    //    static uint8_t readModeCounter = 0;
-    //    static uint8_t readModeByte = 0;
-    //    static uint8_t readModeError = NETWORK_NO_ERROR;
-    //    if (readModeCounter == 7) 
-    //    {
-    //        network_process_byte(readModeError, readModeByte);
-    //        readModeCounter = 0;
-    //        readModeByte = 0;
-            // Nach erfolgreichen lesen/schreiben TIMER2_OVF_vect deaktivieren
-            // INT0_vect aktivieren
-    //    } 
-    //    else 
-    //    {
-    //        readModeByte |= NETWORK_PORT;
-    //        readModeByte &= (0<<1);
-    //        readModeCounter++;
-    //    }
-    //}
-
-    //if (writeMode == true) 
-    //{
-    //    static uint8_t writeModeCounter = 0;
-    //    static uint8_t writeModeError = NETWORK_NO_ERROR;
-    //    if ((writeModeCounter < 7) && (writeModeError == 0)) 
-    //    {
-    //        if (writeModeByte & (1 << writeModeCounter))
-    //        {
-    //            writeModeError = network_send_one();
-    //        }
-    //        else
-    //        {
-    //            writeModeError = network_send_zero();
-    //        }
-    //        writeModeCounter++;
-    //    }
-    //    else
-    //    {
-    //        writeModeCounter = 0;
-    //        writeModeError = 0;
-    //        writeModeByte = 0;
-    //        writeMode = false;
-    //        network_pull_up();
-    //        // Nach erfolgreichen lesen/schreiben TIMER2_OVF_vect deaktivieren
-    //        // INT0_vect aktivieren
-    //    }
-    //}
 }
 
 void network_set_port_mode(bool read)
@@ -662,20 +601,20 @@ void network_set_port_mode(bool read)
     {
         // if current state is output low, output high must be used as a
         // intermediate step
-        if ((NETWORK_DDR & (1<<NETWORK_PORT_PIN))
-            && !(NETWORK_PORT & (1<<NETWORK_PORT_PIN)))
+        if ((NETWORK_DDR & (1 << NETWORK_PORT_PIN))
+            && !(NETWORK_PORT & (1 << NETWORK_PORT_PIN)))
         {
             // set output high
-            NETWORK_PORT |= (1<<NETWORK_PORT_PIN);
+            NETWORK_PORT |= (1 << NETWORK_PORT_PIN);
         }
 
         // set input pull-up
-        NETWORK_DDR &= ~(1<<NETWORK_PORT_PIN);
-        NETWORK_PORT |= (1<<NETWORK_PORT_PIN);
+        NETWORK_DDR &= ~(1 << NETWORK_PORT_PIN);
+        NETWORK_PORT |= (1 << NETWORK_PORT_PIN);
     }
     else
     {
-        // if current status is tri-state, input pul-up must be used as a
+        // if current status is tri-state, input pull-up must be used as a
         // intermediate step
         if (!(NETWORK_DDR & (1<<NETWORK_PORT_PIN))
             && !(NETWORK_PORT & (1<<NETWORK_PORT_PIN)))
@@ -685,8 +624,8 @@ void network_set_port_mode(bool read)
         }
 
         // set output high
-        NETWORK_DDR |= (1<<NETWORK_PORT_PIN);
-        NETWORK_PORT |= (1<<NETWORK_PORT_PIN);
+        NETWORK_DDR |= (1 << NETWORK_PORT_PIN);
+        NETWORK_PORT |= (1 << NETWORK_PORT_PIN);
     }
 }
 
@@ -696,11 +635,11 @@ uint8_t network_write_bit(uint8_t bit)
     
     if (bit)
     {
-        NETWORK_PORT |= (1<<NETWORK_PORT_PIN);
+        NETWORK_PORT |= (1 << NETWORK_PORT_PIN);
     }
     else
     {
-        NETWORK_PORT &= (1<<NETWORK_PORT_PIN);
+        NETWORK_PORT &= ~(1 << NETWORK_PORT_PIN);
     }
 
     // check for SLAM

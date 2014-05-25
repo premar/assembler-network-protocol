@@ -218,12 +218,6 @@ uint8_t network_write_packet(struct network_packet_header *packet_header,
   const uint8_t *packet_data);
 
 /*
- * Function: network_write_bytes()
- * Description: Writes bytes to the network.
- */
-uint8_t network_write_bytes(const uint8_t *data, uint8_t length);
-
-/*
  * Function: network_wait_after_collision()
  * Description: Waits a pseudo random time. To use after a collision.
  */
@@ -255,6 +249,12 @@ void network_disable_timer_ovf_int(void);
 void network_disable_timer_cpm_int(void);
 void network_enable_timer_ovf_int(void);
 void network_enable_timer_cpm_int(void);
+
+/*
+ * Function: network_write_bytes()
+ * Description: Writes bytes to the network.
+ */
+uint8_t network_write_bytes(const uint8_t *data, uint8_t length);
 
 /*
  * Function: network_write_byte()
