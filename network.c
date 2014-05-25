@@ -33,7 +33,7 @@ uint8_t network_initialize(void)
     bool is_address_used = true;
     uint8_t address;
 
-    if (!network_conn.is_initialized) 
+    if (!network_conn.is_initialized)
     {
         network_initialize_external_int();
         network_initialize_timer_int();
@@ -50,11 +50,11 @@ uint8_t network_initialize(void)
             is_address_used = network_check(address++);
         } while (address < NETWORK_ADDRESS_MAX && is_address_used);
 
-        if (!is_address_used) 
+        if (!is_address_used)
         {
             network_conn.address = --address;
-        } 
-        else 
+        }
+        else
         {
             network_conn.is_initialized = false;
             error = NETWORK_NONE_ADDRESS_AVAILABLE;
@@ -70,7 +70,7 @@ bool network_check(uint8_t address)
 
     error = network_send(address, NETWORK_STATUS_CHECK, NETWORK_COMMAND_NONE,
         NULL, 0);
-    if (error == NETWORK_NO_ERROR) 
+    if (error == NETWORK_NO_ERROR)
     {
         error = network_wait_for_packet(address, NETWORK_STATUS_ACKNOWLEDGE,
             NETWORK_COMMAND_NONE, NETWORK_ID_ANY, &packet_header, NULL,
@@ -97,7 +97,7 @@ uint8_t network_get_response(uint8_t address, uint8_t command,
 
     error = network_send(address, NETWORK_STATUS_REQUEST, command,
         request_data, request_length);
-    if (error == NETWORK_NO_ERROR && address != NETWORK_ADDRESS_BROADCAST) 
+    if (error == NETWORK_NO_ERROR && address != NETWORK_ADDRESS_BROADCAST)
     {
         error = network_wait_for_packet(address, NETWORK_STATUS_RESPONSE,
             command, NETWORK_ID_ANY, &response_packet, response_data, timeout);
@@ -121,7 +121,7 @@ uint8_t network_get_request(struct network_request_data *request,
     error = network_wait_for_packet(NETWORK_ADDRESS_NONE,
         NETWORK_STATUS_REQUEST, NETWORK_COMMAND_NONE, NETWORK_ID_ANY,
         &request_packet, &request->data, timeout);
-    if (error == NETWORK_NO_ERROR) 
+    if (error == NETWORK_NO_ERROR)
     {
         request->source = request_packet.source;
         request->destination = request_packet.destination;
@@ -157,7 +157,7 @@ uint8_t network_send(uint8_t destination, uint8_t status, uint8_t command,
     packet_to_send.id = ++network_conn.last_id;
     packet_to_send.length = length;
 
-    do 
+    do
     {
         error = network_write_packet(&packet_to_send, data);
         if (error == NETWORK_NO_ERROR)
@@ -195,10 +195,10 @@ uint8_t network_wait_for_packet(uint8_t source, uint8_t status,
 
     NETWORK_CHECK_IS_INITIALIZED
 
-    do 
+    do
     {
         error = network_get_last_packet(packet_header, packet_data);
-        if (error == NETWORK_NO_ERROR) 
+        if (error == NETWORK_NO_ERROR)
         {
             if (packet_header != NULL
                 && ((source != NETWORK_ADDRESS_NONE
@@ -212,13 +212,13 @@ uint8_t network_wait_for_packet(uint8_t source, uint8_t status,
                 error = NETWORK_NO_DATA;
             }
         }
-        if (error == NETWORK_NO_DATA) 
+        if (error == NETWORK_NO_DATA)
         {
             _delay_ms(1);
         }
     } while (error == NETWORK_NO_DATA
         && (timeout == NETWORK_TIMEOUT_INFINITE || timeout-- > 0));
-    
+
     if (error == NETWORK_NO_ERROR)
     {
         network_acknowledge_packet(packet_header);
@@ -237,7 +237,7 @@ uint8_t network_get_last_packet(struct network_packet_header *packet_header,
 
     NETWORK_CHECK_IS_INITIALIZED
 
-    if (network_conn.is_packet_avaiable) 
+    if (network_conn.is_packet_avaiable)
     {
         if (packet_header != NULL)
         {
@@ -252,8 +252,8 @@ uint8_t network_get_last_packet(struct network_packet_header *packet_header,
             network_conn.last_packet_data = NULL;
             network_conn.is_packet_avaiable = false;
         }
-    } 
-    else 
+    }
+    else
     {
         error = NETWORK_NO_DATA;
     }
@@ -268,7 +268,7 @@ uint8_t network_acknowledge_packet(const struct network_packet_header *packet)
     NETWORK_CHECK_IS_INITIALIZED
 
     if (packet != NULL && packet->source != NETWORK_ADDRESS_BROADCAST
-        && packet->status != NETWORK_STATUS_ACKNOWLEDGE) 
+        && packet->status != NETWORK_STATUS_ACKNOWLEDGE)
     {
         acknowledge_packet.destination = packet->source;
         acknowledge_packet.source = network_conn.address;
@@ -291,7 +291,7 @@ uint8_t network_write_packet(struct network_packet_header *packet_header,
 
     packet_header->checksum = network_calculate_checksum(packet_header);
 
-    do 
+    do
     {
         error = network_write_bytes((const uint8_t*)packet_header,
         sizeof(struct network_packet_header));
@@ -324,13 +324,13 @@ uint8_t network_process_byte(uint8_t error, uint8_t data)
     uint8_t bytes_to_skip = 0;
     bool reset = false;
 
-    if (error == NETWORK_NO_ERROR) 
+    if (error == NETWORK_NO_ERROR)
     {
-        if (packet_index < sizeof(struct network_packet_header)) 
+        if (packet_index < sizeof(struct network_packet_header))
         {
             ((uint8_t*)&packet_header)[packet_index++] = data;
 
-            if (packet_index == 2) 
+            if (packet_index == 2)
             {
                 if (packet_header.destination != network_conn.address
                     && packet_header.destination != NETWORK_ADDRESS_BROADCAST)
@@ -348,7 +348,7 @@ uint8_t network_process_byte(uint8_t error, uint8_t data)
             }
         }
         else if ((packet_index - sizeof(struct network_packet_header))
-            < packet_header.length) 
+            < packet_header.length)
         {
             if (packet_data == NULL)
             {
@@ -359,17 +359,17 @@ uint8_t network_process_byte(uint8_t error, uint8_t data)
         }
     }
 
-    if (error == NETWORK_NO_ERROR) 
+    if (error == NETWORK_NO_ERROR)
     {
         if (packet_index == sizeof(struct network_packet_header)
-            + packet_header.length) 
-        { 
-            if (packet_header.status == NETWORK_STATUS_CHECK) 
+            + packet_header.length)
+        {
+            if (packet_header.status == NETWORK_STATUS_CHECK)
             {
                 network_send(packet_header.source, NETWORK_STATUS_ACKNOWLEDGE,
                     NETWORK_COMMAND_NONE, NULL, 0);
-            } 
-            else if (!network_conn.is_packet_avaiable) 
+            }
+            else if (!network_conn.is_packet_avaiable)
             {
                 memcpy(&network_conn.last_packet_header, &packet_header,
                     sizeof(struct network_packet_header));
@@ -380,7 +380,7 @@ uint8_t network_process_byte(uint8_t error, uint8_t data)
             reset = true;
         }
     }
-    else 
+    else
     {
         bytes_to_skip = sizeof(struct network_packet_header)
             + packet_header.length - packet_index;
@@ -504,18 +504,18 @@ uint8_t network_write_bytes(const uint8_t *data, uint8_t length)
 uint8_t network_write_byte(uint8_t byte)
 {
     while (network_timer_int_mode != NETWORK_TIMER_INTERRUPT_MODE_NONE);
-    
+
     network_disable_external_int();
 
     if (network_timer_int_mode != NETWORK_TIMER_INTERRUPT_MODE_NONE)
         return NETWORK_WRITE_ERROR;
-    
+
     network_timer_int_mode = NETWORK_TIMER_INTERRUPT_MODE_WRITE;
     network_timer_int_byte = byte;
 
     network_set_port_mode(false);
     network_enable_timer_ovf_int();
-    
+
 	return NETWORK_NO_ERROR;
 }
 
@@ -555,20 +555,18 @@ ISR(NETWORK_TIMER_COMP_VECT)
 ISR(NETWORK_TIMER_OVF_VECT)
 {
     static uint8_t index = 0;
-    bool reset = false;
     uint8_t bit = 0;
-    
+
     if (network_timer_int_mode == NETWORK_TIMER_INTERRUPT_MODE_READ)
     {
         bit = NETWORK_PIN & (1 << NETWORK_PORT_PIN);
         bit >>= NETWORK_PORT_PIN;
         network_timer_int_byte <<= 1;
         network_timer_int_byte |= bit;
-        
-        if (++index == 8)
+
+        if (index == 7)
         {
             network_process_byte(NETWORK_NO_ERROR, network_timer_int_byte);
-            reset = true;
         }
     }
     else if (network_timer_int_mode == NETWORK_TIMER_INTERRUPT_MODE_WRITE)
@@ -576,14 +574,9 @@ ISR(NETWORK_TIMER_OVF_VECT)
         bit = network_timer_int_byte & 0b10000000;
         network_timer_int_byte <<= 1;
         network_write_bit(bit);
-        
-        if (++index == 8)
-        {
-            reset = true;
-        }
     }
-    
-    if (reset)
+
+    if (++index == 8)
     {
         network_timer_int_mode = NETWORK_TIMER_INTERRUPT_MODE_NONE;
         network_timer_int_byte = 0;
@@ -632,7 +625,7 @@ void network_set_port_mode(bool read)
 uint8_t network_write_bit(uint8_t bit)
 {
     uint8_t error = NETWORK_NO_ERROR;
-    
+
     if (bit)
     {
         NETWORK_PORT |= (1 << NETWORK_PORT_PIN);
@@ -642,7 +635,8 @@ uint8_t network_write_bit(uint8_t bit)
         NETWORK_PORT &= ~(1 << NETWORK_PORT_PIN);
     }
 
-    // check for SLAM
+    if (bit != (NETWORK_VALIDATE_PORT & (1<< NETWORK_VALIDATE_DB)))
+        error = NETWORK_COLLISION_DETECTED
 
-    return error; 
+    return error;
 }

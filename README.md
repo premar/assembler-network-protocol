@@ -3,7 +3,13 @@ Network_Protocol
 
 A network protocol for communication between multiple microcontrollers.
 
-=================================================================================
+It should be possible to send data and request data. All traffic passes over a 1 bit bus.
+To avoid possible interferences the bus is equipped with a pullup. 
+
+Used hardware:
+
+- Atmel STK500
+- Atmega8515
 
 LICENSE
 =======

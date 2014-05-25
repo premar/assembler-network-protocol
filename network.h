@@ -86,9 +86,9 @@
 #define NETWORK_PIN             PIND
 #define NETWORK_PORT_PIN        PD2
 
-/*#define NETWORK_VALIDATE_PORT   PORTA
+#define NETWORK_VALIDATE_PORT   PORTA
 #define NETWORK_VALIDATE_DDR    DDRA
-#define NETWORK_VALIDATE_DB     PD1*/
+#define NETWORK_VALIDATE_DB     PD1
 
 // Represents the data of a request.
 struct network_request_data {
@@ -111,7 +111,7 @@ struct network_packet_header {
 };
 
 // Represents a network connection.
-struct network_connection 
+struct network_connection
 {
     uint8_t address;
     uint8_t last_id;
