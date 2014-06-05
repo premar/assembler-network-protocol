@@ -244,7 +244,7 @@ uint8_t network_get_last_packet(struct network_packet_header *packet_header,
             memcpy(packet_header, &network_conn.last_packet_header,
             sizeof(struct network_packet_header));
             if (packet_data != NULL)
-            *packet_data = network_conn.last_packet_data;
+                *packet_data = network_conn.last_packet_data;
         }
         else
         {
@@ -523,9 +523,6 @@ ISR(NETWORK_INT_VECT)
 {
     network_disable_external_int();
 
-    // clear eventual second interrupt flag
-    //GIFR &= ~(1 << NETWORK_INTF);
-
     // if somehow a second external interrupt occurs while still processing
     // the last, terminate
     if (network_timer_int_mode != NETWORK_TIMER_INTERRUPT_MODE_NONE)
@@ -541,13 +538,6 @@ ISR(NETWORK_INT_VECT)
 ISR(NETWORK_TIMER_COMP_VECT)
 {
     network_disable_timer_cpm_int();
-
-    // clear eventual second interrupt flag
-    //GIFR &= ~(1 << NETWORK_OCF);
-
-    // if invalid call, terminate
-    //if (network_timer_int_mode == NETWORK_TIMER_INTERRUPT_MODE_NONE)
-    //    return;
 
     network_enable_timer_ovf_int();
 }
@@ -636,7 +626,7 @@ uint8_t network_write_bit(uint8_t bit)
     }
 
     if (bit != (NETWORK_VALIDATE_PORT & (1<< NETWORK_VALIDATE_DB)))
-        error = NETWORK_COLLISION_DETECTED
+        error = NETWORK_COLLISION_DETECTED;
 
     return error;
 }
