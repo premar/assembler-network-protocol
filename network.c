@@ -516,6 +516,8 @@ uint8_t network_write_byte(uint8_t byte)
     network_set_port_mode(false);
     network_enable_timer_ovf_int();
 
+    network_write_bit(0);
+
 	return NETWORK_NO_ERROR;
 }
 
@@ -547,26 +549,29 @@ ISR(NETWORK_TIMER_OVF_VECT)
     static uint8_t index = 0;
     uint8_t bit = 0;
 
-    if (network_timer_int_mode == NETWORK_TIMER_INTERRUPT_MODE_READ)
+    if (index < 8)
     {
-        bit = NETWORK_PIN & (1 << NETWORK_PORT_PIN);
-        bit >>= NETWORK_PORT_PIN;
-        network_timer_int_byte <<= 1;
-        network_timer_int_byte |= bit;
-
-        if (index == 7)
+        if (network_timer_int_mode == NETWORK_TIMER_INTERRUPT_MODE_READ)
         {
-            network_process_byte(NETWORK_NO_ERROR, network_timer_int_byte);
-        }
-    }
-    else if (network_timer_int_mode == NETWORK_TIMER_INTERRUPT_MODE_WRITE)
-    {
-        bit = network_timer_int_byte & 0b10000000;
-        network_timer_int_byte <<= 1;
-        network_write_bit(bit);
-    }
+            bit = NETWORK_PIN & (1 << NETWORK_PORT_PIN);
+            bit >>= NETWORK_PORT_PIN;
+            network_timer_int_byte <<= 1;
+            network_timer_int_byte |= bit;
 
-    if (++index == 8)
+            if (index == 7)
+            {
+                network_process_byte(NETWORK_NO_ERROR, network_timer_int_byte);
+            }
+        }
+        else if (network_timer_int_mode == NETWORK_TIMER_INTERRUPT_MODE_WRITE)
+        {
+            bit = network_timer_int_byte & 0b10000000;
+            network_timer_int_byte <<= 1;
+            network_write_bit(bit);
+        }
+        index++;
+    }
+    else
     {
         network_timer_int_mode = NETWORK_TIMER_INTERRUPT_MODE_NONE;
         network_timer_int_byte = 0;
@@ -576,6 +581,7 @@ ISR(NETWORK_TIMER_OVF_VECT)
         network_set_port_mode(true);
         network_enable_external_int();
     }
+
 }
 
 void network_set_port_mode(bool read)
