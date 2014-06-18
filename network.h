@@ -122,7 +122,7 @@ struct network_connection
 };
 
 // The global network connection.
-extern struct network_connection network_conn;
+extern volatile struct network_connection network_conn;
 
 // Network timer interrupt mode
 extern volatile uint8_t network_timer_int_mode;

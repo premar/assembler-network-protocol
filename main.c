@@ -1,7 +1,6 @@
 #include "network.h"
 
 #include <avr/interrupt.h>
-//
 #include <util/delay.h>
 
 int main(void)
@@ -14,7 +13,7 @@ int main(void)
 
     while(1)
     {
-        network_write_byte(0b10101010);
+        network_write_byte(0b11001100);
        // _delay_ms(1000);
     }
     return 0;

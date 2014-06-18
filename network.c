@@ -18,7 +18,7 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
-struct network_connection network_conn;
+volatile struct network_connection network_conn;
 
 volatile uint8_t network_timer_int_mode = NETWORK_TIMER_INTERRUPT_MODE_NONE;
 
@@ -294,7 +294,7 @@ uint8_t network_write_packet(struct network_packet_header *packet_header,
     do
     {
         error = network_write_bytes((const uint8_t*)packet_header,
-        sizeof(struct network_packet_header));
+            sizeof(struct network_packet_header));
         if (error == NETWORK_NO_ERROR)
         {
             error = network_write_bytes(packet_data, packet_header->length);
@@ -307,13 +307,14 @@ uint8_t network_write_packet(struct network_packet_header *packet_header,
         attempts++;
     } while (error == NETWORK_WRITE_ERROR
         && attempts < NETWORK_WRITE_PACKET_ATTEMPTS);
+
     return error;
 }
 
 void network_wait_after_collision(void)
 {
-	// TODO: implement
-	// use address and key as seed for random wait time
+    // TODO: implement
+    // use address and key as seed for random wait time
 }
 
 uint8_t network_process_byte(uint8_t error, uint8_t data)
@@ -516,9 +517,7 @@ uint8_t network_write_byte(uint8_t byte)
     network_set_port_mode(false);
     network_enable_timer_ovf_int();
 
-    network_write_bit(0);
-
-	return NETWORK_NO_ERROR;
+    return NETWORK_NO_ERROR;
 }
 
 ISR(NETWORK_INT_VECT)
@@ -548,40 +547,56 @@ ISR(NETWORK_TIMER_OVF_VECT)
 {
     static uint8_t index = 0;
     uint8_t bit = 0;
+    bool reset = false;
 
-    if (index < 8)
+    if (network_timer_int_mode == NETWORK_TIMER_INTERRUPT_MODE_READ)
     {
-        if (network_timer_int_mode == NETWORK_TIMER_INTERRUPT_MODE_READ)
+        if (index < 8)
         {
             bit = NETWORK_PIN & (1 << NETWORK_PORT_PIN);
             bit >>= NETWORK_PORT_PIN;
             network_timer_int_byte <<= 1;
             network_timer_int_byte |= bit;
-
-            if (index == 7)
-            {
-                network_process_byte(NETWORK_NO_ERROR, network_timer_int_byte);
-            }
         }
-        else if (network_timer_int_mode == NETWORK_TIMER_INTERRUPT_MODE_WRITE)
+        else
+        {
+            network_process_byte(NETWORK_NO_ERROR, network_timer_int_byte);
+            reset = true;
+        }
+    }
+    else if (network_timer_int_mode == NETWORK_TIMER_INTERRUPT_MODE_WRITE)
+    {
+        if (index == 0)
+        {
+            network_write_bit(0);
+        }
+        else if (index < 9)
         {
             bit = network_timer_int_byte & 0b10000000;
             network_timer_int_byte <<= 1;
             network_write_bit(bit);
         }
-        index++;
+        else
+        {
+            reset = true;
+        }
     }
-    else
+
+    if (reset)
     {
         network_timer_int_mode = NETWORK_TIMER_INTERRUPT_MODE_NONE;
         network_timer_int_byte = 0;
         index = 0;
+        reset = false;
 
         network_disable_timer_ovf_int();
         network_set_port_mode(true);
         network_enable_external_int();
     }
-
+    else
+    {
+        index++;
+    }
 }
 
 void network_set_port_mode(bool read)
