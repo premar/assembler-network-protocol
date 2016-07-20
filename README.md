@@ -1,5 +1,5 @@
-Network_Protocol
-================
+Assembler Network Protocol
+--------------
 
 A network protocol for communication between multiple microcontrollers.
 
@@ -12,9 +12,9 @@ Used hardware:
 - Atmega8515
 
 LICENSE
-=======
+--------------
 
-Copyright (c) 2014, Marius Preuss, Viktor Puselja
+Copyright (c) 2014-2016, Marius Preuss, Viktor Puselja
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
